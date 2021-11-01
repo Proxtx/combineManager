@@ -7,17 +7,20 @@ export let services = {};
 export let serviceConfirmation = {};
 let portIndex = config.startPort;
 
-export const startService = (path) => {
-  fork(path, [++portIndex, config.startPort], {
+export const startService = async (path) => {
+  let port = ++portIndex;
+  fork(path, [port, config.startPort], {
     cwd: dirname(path),
   });
 
-  serviceConfirmation[portIndex] = false;
+  await new Promise((resolve) => (serviceConfirmation[port] = resolve));
+
+  return port;
 };
 
 export const confirmService = (port, name) => {
-  serviceConfirmation[port] = true;
   services[name] = { port };
+  serviceConfirmation[port]();
 };
 
 export const getService = (name) => {
